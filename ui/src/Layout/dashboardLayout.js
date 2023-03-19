@@ -1,14 +1,20 @@
 import React from "react";
 import {makeStyles} from "@material-ui/core";
-import timeLogo from "../Assets/Logo/timeLoading.gif";
-// import { useNavigate } from "react-router-dom";
+import Logo from "../Assets/Logo/Logo.png";
+import store from "../Store/storeIndex";
+import { connect } from "react-redux";
+import { setMenu } from "../Store/Action/DashBoard/dashboardAction";
+import { useNavigate } from "react-router-dom";
 
 const useStyles = makeStyles({
-    root: {
-       border: "5px solid #5e5858",
+    base: {
+       border: "5px solid gray",
        borderRadius: "8px",
-       width: "100%vh",
+       height: "98vh"
+    },  
+    root: {
        height: "98vh",
+       display: "flex"
     },
     menuContainer: {
        listStyleType: "none",
@@ -18,6 +24,7 @@ const useStyles = makeStyles({
        width: "250px",
        height: "98vh",
        backgroundColor: "#1c1b1b",
+       display: "block"
    },
    logoContainer: {
        height: "150px"
@@ -27,8 +34,8 @@ const useStyles = makeStyles({
        padding: "0px 0px 0px 0px",
    },
    logo: {
-    width: "50px",
-    height: "50px",
+    width: "35px",
+    height: "35px",
     margin: "35px 0px 0px 20px"
    },
    menuField: {
@@ -53,43 +60,57 @@ const useStyles = makeStyles({
    }
 })
 
-const DashboardLayout = () => {
+const DashboardLayout = ({
+  children
+}) => {
     const style = useStyles();
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
+    // const [menu, setMenu] = React.useState(0);
+    // console.log("Menu...",menu);
+  //  React.useEffect(()=> {
+    //  store.dispatch(setMenu(menu))
+  //  },[menu])
     return (
-        <div className={style.root}>
+        <div className={style.base}>
+         <div className={style.root}>
           <div className={style.menuContainer}>
-              <div className={style.logoContainer}>
-                <img className={style.logo} src={timeLogo} alt="timeLogo"/>
+            <div className={style.logoContainer}>
+                <img className={style.logo} src={Logo} alt="timeLogo"/>
               </div>
-                <li className={style.listStyle}
-                    // onClick={() => navigate('/dashboard')}
+                <span className={style.listStyle}
+                    onClick={() =>  navigate('/')}
                 >
                   <span className={style.menuField}><span className={style.menufieldValue}>Dashboard</span></span>
-                </li>
-                <li className={style.listStyle} 
-                    // onClick={() => navigate('/task')}
+                </span>
+                <span className={style.listStyle} 
+                    onClick={() => navigate('/task')}
                 >
                   <span className={style.menuField}><span className={style.menufieldValue}>Task</span></span>
-                </li>
-                <li className={style.listStyle} 
-                    // onClick={() => navigate('/project')}
+                </span>
+                <span className={style.listStyle} 
+                    onClick={() => navigate('/project')}
                 >
                   <span className={style.menuField}><span className={style.menufieldValue}>Project</span></span>
-                </li>
-                <li className={style.listStyle} 
-                    // onClick={() => navigate('/notification')}
+                </span>
+                <span className={style.listStyle} 
+                    onClick={() => navigate('/notification')}
                 >
                   <span className={style.menuField}><span className={style.menufieldValue}>Notifications</span></span>
-                </li>
-                <li className={style.listStyle} 
-                    // onClick={() => navigate('/settings')}
+                </span>
+                <span className={style.listStyle} 
+                    onClick={() => navigate('/settings')}
                 >
                   <span className={style.menuField}><span className={style.menufieldValue}>Settings</span></span>
-                </li> 
+                </span> 
+             </div>
+             <div>{children}</div>
           </div>
         </div>
     )
 };
 
-export default DashboardLayout;
+const mapStateToProps = (state) => ({
+     menu: state
+})
+
+export default connect(mapStateToProps)(DashboardLayout);
