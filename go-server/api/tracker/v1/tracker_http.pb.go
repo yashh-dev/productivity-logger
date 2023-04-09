@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.6.1
 // - protoc             v3.19.1
-// source: api/tracker/v1/tracker.proto
+// source: tracker/v1/tracker.proto
 
 package v1
 
@@ -21,12 +21,14 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationTrackerCreateBlockFunc = "/helloworld.v1.tracker.Tracker/CreateBlockFunc"
 const OperationTrackerDeletBlockFunc = "/helloworld.v1.tracker.Tracker/DeletBlockFunc"
+const OperationTrackerListBlockFunc = "/helloworld.v1.tracker.Tracker/ListBlockFunc"
 const OperationTrackerUpdateBlockFunc = "/helloworld.v1.tracker.Tracker/UpdateBlockFunc"
 
 type TrackerHTTPServer interface {
 	CreateBlockFunc(context.Context, *CreateBlock) (*BlockResp, error)
-	DeletBlockFunc(context.Context, *DeletBlock) (*Status, error)
-	UpdateBlockFunc(context.Context, *UpdateBlock) (*UpdateResponse, error)
+	DeletBlockFunc(context.Context, *DeletBlock) (*BlockResp, error)
+	ListBlockFunc(context.Context, *GetListReq) (*BlockResp, error)
+	UpdateBlockFunc(context.Context, *UpdateBlock) (*BlockResp, error)
 }
 
 func RegisterTrackerHTTPServer(s *http.Server, srv TrackerHTTPServer) {
@@ -34,12 +36,16 @@ func RegisterTrackerHTTPServer(s *http.Server, srv TrackerHTTPServer) {
 	r.POST("/createblock", _Tracker_CreateBlockFunc0_HTTP_Handler(srv))
 	r.DELETE("/deleteblock/{UserId}/{BlockId}", _Tracker_DeletBlockFunc0_HTTP_Handler(srv))
 	r.PUT("/updateblock", _Tracker_UpdateBlockFunc0_HTTP_Handler(srv))
+	r.GET("/getblocks/{UserId}", _Tracker_ListBlockFunc0_HTTP_Handler(srv))
 }
 
 func _Tracker_CreateBlockFunc0_HTTP_Handler(srv TrackerHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateBlock
-		if err := ctx.Bind(&in); err != nil {
+		if err := ctx.Bind(&in.CreateBlockRequestBody); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationTrackerCreateBlockFunc)
@@ -72,7 +78,7 @@ func _Tracker_DeletBlockFunc0_HTTP_Handler(srv TrackerHTTPServer) func(ctx http.
 		if err != nil {
 			return err
 		}
-		reply := out.(*Status)
+		reply := out.(*BlockResp)
 		return ctx.Result(200, reply)
 	}
 }
@@ -91,15 +97,38 @@ func _Tracker_UpdateBlockFunc0_HTTP_Handler(srv TrackerHTTPServer) func(ctx http
 		if err != nil {
 			return err
 		}
-		reply := out.(*UpdateResponse)
+		reply := out.(*BlockResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Tracker_ListBlockFunc0_HTTP_Handler(srv TrackerHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetListReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationTrackerListBlockFunc)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListBlockFunc(ctx, req.(*GetListReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*BlockResp)
 		return ctx.Result(200, reply)
 	}
 }
 
 type TrackerHTTPClient interface {
 	CreateBlockFunc(ctx context.Context, req *CreateBlock, opts ...http.CallOption) (rsp *BlockResp, err error)
-	DeletBlockFunc(ctx context.Context, req *DeletBlock, opts ...http.CallOption) (rsp *Status, err error)
-	UpdateBlockFunc(ctx context.Context, req *UpdateBlock, opts ...http.CallOption) (rsp *UpdateResponse, err error)
+	DeletBlockFunc(ctx context.Context, req *DeletBlock, opts ...http.CallOption) (rsp *BlockResp, err error)
+	ListBlockFunc(ctx context.Context, req *GetListReq, opts ...http.CallOption) (rsp *BlockResp, err error)
+	UpdateBlockFunc(ctx context.Context, req *UpdateBlock, opts ...http.CallOption) (rsp *BlockResp, err error)
 }
 
 type TrackerHTTPClientImpl struct {
@@ -116,15 +145,15 @@ func (c *TrackerHTTPClientImpl) CreateBlockFunc(ctx context.Context, in *CreateB
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationTrackerCreateBlockFunc))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in.CreateBlockRequestBody, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return &out, err
 }
 
-func (c *TrackerHTTPClientImpl) DeletBlockFunc(ctx context.Context, in *DeletBlock, opts ...http.CallOption) (*Status, error) {
-	var out Status
+func (c *TrackerHTTPClientImpl) DeletBlockFunc(ctx context.Context, in *DeletBlock, opts ...http.CallOption) (*BlockResp, error) {
+	var out BlockResp
 	pattern := "/deleteblock/{UserId}/{BlockId}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationTrackerDeletBlockFunc))
@@ -136,8 +165,21 @@ func (c *TrackerHTTPClientImpl) DeletBlockFunc(ctx context.Context, in *DeletBlo
 	return &out, err
 }
 
-func (c *TrackerHTTPClientImpl) UpdateBlockFunc(ctx context.Context, in *UpdateBlock, opts ...http.CallOption) (*UpdateResponse, error) {
-	var out UpdateResponse
+func (c *TrackerHTTPClientImpl) ListBlockFunc(ctx context.Context, in *GetListReq, opts ...http.CallOption) (*BlockResp, error) {
+	var out BlockResp
+	pattern := "/getblocks/{UserId}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationTrackerListBlockFunc))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *TrackerHTTPClientImpl) UpdateBlockFunc(ctx context.Context, in *UpdateBlock, opts ...http.CallOption) (*BlockResp, error) {
+	var out BlockResp
 	pattern := "/updateblock"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationTrackerUpdateBlockFunc))

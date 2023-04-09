@@ -1,70 +1,73 @@
 syntax = "proto3";
 
 package helloworld.v1.tracker;
-
+import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
 option go_package = "go-server/api/helloworld/v1;v1";
 option java_multiple_files = true;
 
 message CreateBlock{
-    string UserId=1;
-    string StartTime=2;
-    string Lapse=5;
-    string Duration=7;
-    string StopTime=3;
-    string Label=4;
+    CreateBlockRequestBody create_block_request_body=1;
+    string Status =4;
+    int32 Code =2;
+    string Execution=3;
 }
 
 message BlockResp{
+   BlockItems blocks=1;
+   string Status =4;
+   int32 Code =2;
+   string Execution=3;
+}
+message BlockItems{
     string BlockId=1;
     string StartTime=2;
     string StopTime=3;
     string Duration=4;
     string Label=5;
 }
-
 message DeletBlock{
     string UserId=1;
     string BlockId=2;
 }
 
-message Status {
-    string Status=1;
-}
+
 message UpdateBlock{
     string UserId=1;
     string BlockId=2;
 }
-message UpdateResponse{
-    string BlockId=1;
-    string Label=5;
-    string Duration=2;
-    string StartTime=3;
-    string StopTime=4;
-}
+
 message GetListReq{
     string UserId=1;
+}
+message CreateBlockRequestBody{
+    string UserId=1;
+    string StartTime=2;
+    map<int32,google.protobuf.Timestamp> Lapse=5;
+    string Duration=7;
+    string StopTime=3;
+    string Label=4;
 }
 service Tracker{
     rpc CreateBlockFunc(CreateBlock) returns (BlockResp){
         option (google.api.http) = {
             post :"/createblock"
-            body :"*"
+            body :"create_block_request_body"
         };
     }
-    rpc DeletBlockFunc(DeletBlock) returns (Status){
+    rpc DeletBlockFunc(DeletBlock) returns (BlockResp){
         option (google.api.http) = {
             delete :"/deleteblock/{UserId}/{BlockId}"
         };
     }
-    rpc UpdateBlockFunc(UpdateBlock) returns (UpdateResponse){
+    rpc UpdateBlockFunc(UpdateBlock) returns (BlockResp){
         option (google.api.http) = {
             put: "/updateblock"
             body:"*"
         };
     }
-    rpc ListBlockFunc(GetListReq) returns (stream BlockResp){
+    rpc ListBlockFunc(GetListReq) returns ( BlockResp){
         option (google.api.http) = {
             get: "/getblocks/{UserId}"
         };

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.19.1
-// source: api/tracker/v1/tracker.proto
+// source: tracker/v1/tracker.proto
 
 package v1
 
@@ -30,9 +30,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TrackerClient interface {
 	CreateBlockFunc(ctx context.Context, in *CreateBlock, opts ...grpc.CallOption) (*BlockResp, error)
-	DeletBlockFunc(ctx context.Context, in *DeletBlock, opts ...grpc.CallOption) (*Status, error)
-	UpdateBlockFunc(ctx context.Context, in *UpdateBlock, opts ...grpc.CallOption) (*UpdateResponse, error)
-	ListBlockFunc(ctx context.Context, in *GetListReq, opts ...grpc.CallOption) (Tracker_ListBlockFuncClient, error)
+	DeletBlockFunc(ctx context.Context, in *DeletBlock, opts ...grpc.CallOption) (*BlockResp, error)
+	UpdateBlockFunc(ctx context.Context, in *UpdateBlock, opts ...grpc.CallOption) (*BlockResp, error)
+	ListBlockFunc(ctx context.Context, in *GetListReq, opts ...grpc.CallOption) (*BlockResp, error)
 }
 
 type trackerClient struct {
@@ -52,8 +52,8 @@ func (c *trackerClient) CreateBlockFunc(ctx context.Context, in *CreateBlock, op
 	return out, nil
 }
 
-func (c *trackerClient) DeletBlockFunc(ctx context.Context, in *DeletBlock, opts ...grpc.CallOption) (*Status, error) {
-	out := new(Status)
+func (c *trackerClient) DeletBlockFunc(ctx context.Context, in *DeletBlock, opts ...grpc.CallOption) (*BlockResp, error) {
+	out := new(BlockResp)
 	err := c.cc.Invoke(ctx, Tracker_DeletBlockFunc_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -61,8 +61,8 @@ func (c *trackerClient) DeletBlockFunc(ctx context.Context, in *DeletBlock, opts
 	return out, nil
 }
 
-func (c *trackerClient) UpdateBlockFunc(ctx context.Context, in *UpdateBlock, opts ...grpc.CallOption) (*UpdateResponse, error) {
-	out := new(UpdateResponse)
+func (c *trackerClient) UpdateBlockFunc(ctx context.Context, in *UpdateBlock, opts ...grpc.CallOption) (*BlockResp, error) {
+	out := new(BlockResp)
 	err := c.cc.Invoke(ctx, Tracker_UpdateBlockFunc_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -70,36 +70,13 @@ func (c *trackerClient) UpdateBlockFunc(ctx context.Context, in *UpdateBlock, op
 	return out, nil
 }
 
-func (c *trackerClient) ListBlockFunc(ctx context.Context, in *GetListReq, opts ...grpc.CallOption) (Tracker_ListBlockFuncClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Tracker_ServiceDesc.Streams[0], Tracker_ListBlockFunc_FullMethodName, opts...)
+func (c *trackerClient) ListBlockFunc(ctx context.Context, in *GetListReq, opts ...grpc.CallOption) (*BlockResp, error) {
+	out := new(BlockResp)
+	err := c.cc.Invoke(ctx, Tracker_ListBlockFunc_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &trackerListBlockFuncClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Tracker_ListBlockFuncClient interface {
-	Recv() (*BlockResp, error)
-	grpc.ClientStream
-}
-
-type trackerListBlockFuncClient struct {
-	grpc.ClientStream
-}
-
-func (x *trackerListBlockFuncClient) Recv() (*BlockResp, error) {
-	m := new(BlockResp)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // TrackerServer is the server API for Tracker service.
@@ -107,9 +84,9 @@ func (x *trackerListBlockFuncClient) Recv() (*BlockResp, error) {
 // for forward compatibility
 type TrackerServer interface {
 	CreateBlockFunc(context.Context, *CreateBlock) (*BlockResp, error)
-	DeletBlockFunc(context.Context, *DeletBlock) (*Status, error)
-	UpdateBlockFunc(context.Context, *UpdateBlock) (*UpdateResponse, error)
-	ListBlockFunc(*GetListReq, Tracker_ListBlockFuncServer) error
+	DeletBlockFunc(context.Context, *DeletBlock) (*BlockResp, error)
+	UpdateBlockFunc(context.Context, *UpdateBlock) (*BlockResp, error)
+	ListBlockFunc(context.Context, *GetListReq) (*BlockResp, error)
 	mustEmbedUnimplementedTrackerServer()
 }
 
@@ -120,14 +97,14 @@ type UnimplementedTrackerServer struct {
 func (UnimplementedTrackerServer) CreateBlockFunc(context.Context, *CreateBlock) (*BlockResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBlockFunc not implemented")
 }
-func (UnimplementedTrackerServer) DeletBlockFunc(context.Context, *DeletBlock) (*Status, error) {
+func (UnimplementedTrackerServer) DeletBlockFunc(context.Context, *DeletBlock) (*BlockResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletBlockFunc not implemented")
 }
-func (UnimplementedTrackerServer) UpdateBlockFunc(context.Context, *UpdateBlock) (*UpdateResponse, error) {
+func (UnimplementedTrackerServer) UpdateBlockFunc(context.Context, *UpdateBlock) (*BlockResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBlockFunc not implemented")
 }
-func (UnimplementedTrackerServer) ListBlockFunc(*GetListReq, Tracker_ListBlockFuncServer) error {
-	return status.Errorf(codes.Unimplemented, "method ListBlockFunc not implemented")
+func (UnimplementedTrackerServer) ListBlockFunc(context.Context, *GetListReq) (*BlockResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBlockFunc not implemented")
 }
 func (UnimplementedTrackerServer) mustEmbedUnimplementedTrackerServer() {}
 
@@ -196,25 +173,22 @@ func _Tracker_UpdateBlockFunc_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Tracker_ListBlockFunc_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetListReq)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _Tracker_ListBlockFunc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetListReq)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(TrackerServer).ListBlockFunc(m, &trackerListBlockFuncServer{stream})
-}
-
-type Tracker_ListBlockFuncServer interface {
-	Send(*BlockResp) error
-	grpc.ServerStream
-}
-
-type trackerListBlockFuncServer struct {
-	grpc.ServerStream
-}
-
-func (x *trackerListBlockFuncServer) Send(m *BlockResp) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(TrackerServer).ListBlockFunc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Tracker_ListBlockFunc_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TrackerServer).ListBlockFunc(ctx, req.(*GetListReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // Tracker_ServiceDesc is the grpc.ServiceDesc for Tracker service.
@@ -236,13 +210,11 @@ var Tracker_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateBlockFunc",
 			Handler:    _Tracker_UpdateBlockFunc_Handler,
 		},
-	},
-	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ListBlockFunc",
-			Handler:       _Tracker_ListBlockFunc_Handler,
-			ServerStreams: true,
+			MethodName: "ListBlockFunc",
+			Handler:    _Tracker_ListBlockFunc_Handler,
 		},
 	},
-	Metadata: "api/tracker/v1/tracker.proto",
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "tracker/v1/tracker.proto",
 }
